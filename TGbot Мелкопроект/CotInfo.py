@@ -1,5 +1,4 @@
 
-import aiofiles
 import os
 import datetime as dt
 # Парсинг папки

@@ -1,5 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-import CotInfo as ci
+import CotInfo_alpha as ci
 # Создание айдишников происходит только с нижним подчеркиванием после основного названия элемента   пример   -   Ленина_subscribe
 
 BtnMain = KeyboardButton('Главное меню')

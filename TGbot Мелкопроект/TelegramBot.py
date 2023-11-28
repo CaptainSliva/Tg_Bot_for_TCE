@@ -10,7 +10,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 # Мои файлы
-# Мои файлы
 import Buttons as btn
 import CotInfo as ci
 import bot_config as bc
@@ -104,7 +103,7 @@ class UserState(StatesGroup):
 @dp.message_handler(commands = ['start', 's', 'старт'])
 async def cmd_start(message: types.Message):
     global Admin_id
-    Admin_id = ci.parse_config('Admin')
+    Admin_id = bc.Config['Admin']
     if ci.bot_check_sub(str(message.from_user.id), 'Subscribers'):
         await message.answer(f'Здравствуйте! {message.from_user.full_name}', reply_markup=btn.MainMenu)
     

@@ -10,8 +10,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 # Мои файлы
-import Buttons as btn
-import CotInfo as ci
+import Buttons_alpha as btn
+import CotInfo_alpha as ci
 import bot_config_alpha as bc
 
 # # Начинаем создавать бота
