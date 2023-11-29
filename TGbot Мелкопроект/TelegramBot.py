@@ -8,6 +8,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import os
 
 # Мои файлы
 import Buttons as btn
@@ -74,6 +75,10 @@ ci.create_dir_for_admin()
 def normal(nstr): # Функция ля удаления айдишника из адреса    nstr - строка с айдишником
     return nstr.split('/')[0]
 
+async def send_graphic(graphic, chat_id):
+    with open(graphic[0], 'rb') as photo:
+        await bot.send_photo(chat_id=chat_id, photo=photo)
+    os.remove(graphic[0])
 
 # Установление времени после перезапуска бота
 for i in ci.adding_msg(): # Ключи словаря
@@ -95,6 +100,8 @@ class UserState(StatesGroup):
     anytime = State()
 
 
+class CurrentCotel:
+    cotel = str()
 # class Admin(StatesGroup):
 #     requests = State()
 #     subscribers = State()
@@ -274,6 +281,61 @@ async def bot_message(message: types.Message):
             # ну и соответственно незабыть добавить separate в файл -3 элементом.
 
 
+    # Графики
+        if message.text == 'Графики':
+            await message.answer('Графики', reply_markup = btn.GraphicTipe)
+
+
+        if message.text == 'Назад':
+            await message.answer('Графики', reply_markup = btn.GraphicTipe)
+
+
+        if message.text == 'T':
+            await message.answer('Графики температуры', reply_markup = btn.TGraphicInterval)
+
+        if message.text == 'T за час':
+            # btn.NewGraphic('T', 1)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, график температуры за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 1))
+            await send_graphic(graphic, message.chat.id)
+
+        if message.text == 'T за 12 часов':
+            # btn.NewGraphic('T', 12)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики температуры за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 12))
+            await send_graphic(graphic, message.chat.id)
+    
+
+        if message.text == 'P':
+            await message.answer('Графики давления', reply_markup = btn.PGraphicInterval)
+
+        if message.text == 'P за час':
+            # btn.NewGraphic('P', 1)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 1))
+            await send_graphic(graphic, message.chat.id)
+
+        if message.text == 'P за 12 часов':
+            # btn.NewGraphic('P', 12)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 12))
+            await send_graphic(graphic, message.chat.id)
+
+
+
+
+        # @dp.callback_query_handler(text = btn.Inline_keyboard.MyGraphic_t) 
+        # async def msg_answer_g(callback: types.CallbackQuery): 
+        #     # await Admin.subscribers.set()   
+        #     callback_answer = 'FilesForBot\T_reports\\'+normal(callback.data)+'_T1h(1).pdf'
+        #     print(callback_answer)
+        #     graphic = ci.convert_pdf2img(callback_answer)
+        #     # await bot.send_photo(chat_id=message.chat.id, graphic)
+        #     await callback.message.answer(normal(callback.data), reply_markup=btn.GraphicTipe)
+        #     await callback.answer()
+            # with open(graphic[0], 'rb') as photo:
+            #     await bot.send_photo(chat_id=message.chat.id, photo=photo)
+
     # Переход в главное меню
 
         
@@ -309,7 +371,7 @@ async def bot_message(message: types.Message):
             print('отработала отписка')
             print(mes_id)
             callback_answer=normal(callback.data) # Переменная для сохранения адреса
-            await btn.screening_generate(callback_answer, mes_id)
+            btn.screening_generate(callback_answer, mes_id)
             # cotelnaya_l=''.join([f'{i}/\\' for i in ci.parse_table()[f'{callback_answer}']]).replace('/\\','\n')
             # if ci.check_param('Settings', 'separate', message.from_user.id):
             cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
@@ -396,6 +458,7 @@ async def bot_message(message: types.Message):
             global fav_adres, subscribe_adres
             print('отработала избранное')
             callback_answer=normal(callback.data) # Переменная для сохранения адреса
+            CurrentCotel.cotel = callback_answer
             # cotelnaya_l=''.join([f'{i}/\\' for i in ci.parse_table()[f'{callback_answer}']]).replace('/\\','\n')
             # if ci.check_param('Settings', 'separate', message.from_user.id):
             cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
@@ -475,7 +538,6 @@ async def bot_message(message: types.Message):
                     elif ci.file_check_copy(f'{callback_answer}(1)', callback.from_user.id, 'sub'):
                         print(f'{callback_answer}(1)')
 
-                        print(cotelnaya_l)
                         await callback.message.answer(f'{cotelnaya_l}', reply_markup = btn.AddToFav) # Выводит информацию о котельной
                         await callback.answer()
                         adress = callback_answer
@@ -501,7 +563,8 @@ async def bot_message(message: types.Message):
                     btn.Teplosystems_Cotel_test(callback_answer)
                     
                     await callback.message.answer(f'Теплосистемы {callback_answer}:', reply_markup = btn.TS_cotel_test)
-
+                print(adress, type(adress))
+                CurrentCotel.cotel = adress+'(1)'
 
 
             print(message.text, '+++++++++++++++++++++++++++++++++++++', adress)

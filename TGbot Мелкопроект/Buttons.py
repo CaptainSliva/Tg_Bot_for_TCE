@@ -1,5 +1,11 @@
-from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 import CotInfo as ci
+
+
+
+class Inline_keyboard:
+    MyGraphic = InlineKeyboardMarkup()
+    MyGraphic_t = [f'{i}/graphic' for i in ci.parse_file_TP_district_t('T', 1)]#+[i for i in ci.parse_file_TP_district_t('T', 12)]+[i for i in ci.parse_file_TP_district_t('P', 1)]+[i for i in ci.parse_file_TP_district_t('P', 12)]
 # Создание айдишников происходит только с нижним подчеркиванием после основного названия элемента   пример   -   Ленина_subscribe
 
 BtnMain = KeyboardButton('Главное меню')
@@ -10,11 +16,40 @@ button_for_nosep = KeyboardButton('Полный вывод')
 # MainMenu
 MySubscribes=KeyboardButton('Мои подписки')
 ListAll = KeyboardButton('Получить список районов')
+Graphics = KeyboardButton('Графики')
 MyFavs = KeyboardButton('Избранное')
 
 MainMenu = ReplyKeyboardMarkup(resize_keyboard=True).row(MySubscribes, MyFavs).add(ListAll)
     
 MainNext = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain)
+
+# Graphics
+
+t = KeyboardButton('T')
+t1 = KeyboardButton('T за час')
+t12 = KeyboardButton('T за 12 часов')
+p = KeyboardButton('P')
+p1 = KeyboardButton('P за час')
+p12 = KeyboardButton('P за 12 часов')
+back = KeyboardButton('Назад')
+
+
+# BackFromP = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(p1, p12)
+# BackFromTP = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(t1, t12)
+GraphicTipe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(t, p)
+TGraphicInterval = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(t1, t12)
+PGraphicInterval = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(p1, p12)
+
+
+# def NewGraphic(val, interval): # Функция для генерации инлайн кнопок в раздел с подписками # message.from_user.id - id пользователя  # adres - adresa # Создание кнопок на зафоловеные котельные
+#     MyGraphic_copy = InlineKeyboardMarkup()
+    # # print(ci.subscribe_del(adres, id), '//////////////////////////////')
+    # for i in ci.parse_file_TP_district(val, interval): # Создание кнопок для всего списка котельных
+    #     Inline_keyboard.MyGraphic = MyGraphic_copy.add(InlineKeyboardButton(text=i.split(f'_{val}')[0], callback_data=f'{i}/graphic'))
+
+
+
+
 # Subscribes
 ToFav = KeyboardButton('Добавить в избранное')
 ToSubscribe = KeyboardButton('Подписаться')
@@ -46,7 +81,7 @@ Delete_from_Subscribe = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain)
 # Delete_from_Subscribe.row(Screen_button, Button_time_on_10_min)
 
 
-async def screening_generate(adres, id):
+def screening_generate(adres, id):
     global Delete_from_Subscribe
     Delete_from_Subscribe_copy = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain).row((f'Интервал сообщений - {ci.screening_time(adres, id)} мин'), Button_time_on_few_min)
     Delete_from_Subscribe = Delete_from_Subscribe_copy
@@ -76,8 +111,8 @@ for i in [j for j in ci.parse_table()]: # Создание кнопок для �
     AllListCotel.add(InlineKeyboardButton(text=i, callback_data=f'{i}/nosubscribe'))
 
 Add_to_Subscribe = ReplyKeyboardMarkup().row(2)
-Add_to_Subscribe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe)
-Add_to_Subscribe_with_Fav = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe, ToFav)
+Add_to_Subscribe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe, Graphics)
+Add_to_Subscribe_with_Fav = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe, Graphics, ToFav)
 
 
 # Add_to_Subscribe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain)
@@ -134,8 +169,8 @@ AddToFav = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain).add(ToFav)
 
 Del_Fav = KeyboardButton('Удалить из избранного')
 
-Add_to_Fav_with_Sub = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain).add(Del_Fav, ToSubscribe)
-Del_From_Fav = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain).add(Del_Fav)
+Add_to_Fav_with_Sub = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain).add(Del_Fav, ToSubscribe, Graphics)
+Del_From_Fav = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain).add(Del_Fav, Graphics)
 
 Favourites_t = list()
 Favourites_t = [f'{i}/fav_cotel' for i in [j for j in ci.parse_table()]]
@@ -154,8 +189,8 @@ def AddToFavsCotel(id): # Функция для генерации инлайн 
 
 
 # Админ-панель
-Amogs = KeyboardButton('Админка')
-Admin_Main = ReplyKeyboardMarkup(resize_keyboard=True).row(MySubscribes, MyFavs).row(Amogs, ListAll)
+Admin = KeyboardButton('Админка')
+Admin_Main = ReplyKeyboardMarkup(resize_keyboard=True).row(MySubscribes, MyFavs).row(Admin, ListAll)
 SubscribersNo = KeyboardButton('Заявки')
 Subscribers = KeyboardButton('Пользователи')
 Admin_Second = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(SubscribersNo, Subscribers)

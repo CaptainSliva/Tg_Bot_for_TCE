@@ -1,20 +1,27 @@
-
+import fitz
+from typing import Tuple
 import os
 import datetime as dt
 # Парсинг папки
 def parse_table():
     temp = dict()
     for f_name in os.listdir(os.getcwd()+'\FilesForBot'):
-        with open(f'{os.getcwd()}\\FilesForBot\{f_name}', 'r') as fol:
-            file = fol.readlines()
-            ad = list()
-            for i in file:
+        
+        if f_name not in ['P_reports', 'T_reports']:
+            # print(f_name)
+            with open(f'{os.getcwd()}\\FilesForBot\{f_name}', 'r') as fol:
+                file = fol.readlines()
+                ad = list()
+                for i in file:
 
-                if 'нет данных' not in i:
-                    # print(i)
-                    ad.append(i.replace('\n', ''))
-            temp[f_name.split('.')[0]] = ad
+                    if 'нет данных' not in i:
+                        # print(i)
+                        ad.append(i.replace('\n', ''))
+                temp[f_name.split('.')[0]] = ad
+        else:
+            print(-1)
     return temp
+
 # def parse_table(adres, id):
 #     temp = dict()
 #     for f_name in os.listdir(os.getcwd()+'\FilesForBot'):
@@ -179,30 +186,53 @@ def parse_file_district(): # Для создания словаря с прин�
 
     for f_name in os.listdir(os.getcwd()+'\FilesForBot'):
         last_name.append(f_name.split('.')[0])
+        if f_name not in ['P_reports', 'T_reports']:
+            with open(f'{os.getcwd()}\\FilesForBot\{f_name}', 'r') as fol:
+                file = fol.readlines()
+                ad = list()
 
-        with open(f'{os.getcwd()}\\FilesForBot\{f_name}', 'r') as fol:
-            file = fol.readlines()
-            ad = list()
+                for i in file:
+                    if 'РТС' in i:
+                        ad.append(i.split(' : ')[1].replace('\n', ''))
+                        break
+                temp[f_name.split('(')[0]]=ad
+                if len(last_name)>1:
+                    indexses = [j for j in range(1,int(f_name.split('(')[1].split(')')[0])+1)]
+                    temp[f_name.split('(')[0]]={str(last_name[-max(indexses)]) : ad}
 
-            for i in file:
-                if 'РТС' in i:
-                    ad.append(i.split(' : ')[1].replace('\n', ''))
-                    break
-            temp[f_name.split('(')[0]]=ad
-            if len(last_name)>1:
-                indexses = [j for j in range(1,int(f_name.split('(')[1].split(')')[0])+1)]
-                temp[f_name.split('(')[0]]={str(last_name[-max(indexses)]) : ad}
-
-                for j in range(1, int(indexses[-1])+1):
-                    if (last_name[-2]!=f_name.split('.')[0]) and (str(last_name[-2]).split('(')[0] == f_name.split('(')[0]):      
-                        name = f_name.split('(')[0]
-                        temp[name][f'{name}({j})']=ad
-                    else:
-                        pass        
-            else:
-                temp[f_name.split('(')[0]]={f_name.split('.')[0] : ad}
+                    for j in range(1, int(indexses[-1])+1):
+                        if (last_name[-2]!=f_name.split('.')[0]) and (str(last_name[-2]).split('(')[0] == f_name.split('(')[0]):      
+                            name = f_name.split('(')[0]
+                            temp[name][f'{name}({j})']=ad
+                        else:
+                            pass        
+                else:
+                    temp[f_name.split('(')[0]]={f_name.split('.')[0] : ad}
     return temp
 
+
+def parse_file_TP_district_t(val, interval): # Создаёт список файлов удоволетворяющих условию времени.
+    temp = dict()
+    last_name = list()
+    name = list()
+    for f_name in os.listdir(os.getcwd()+f'\FilesForBot\{val}_reports'):
+        if f_name.split(f'_{val}')[1].split('h')[0] == str(interval):
+            name.append(f_name.split(f'_{val}')[0])
+
+            
+    return name
+
+def parse_file_TP_district(cotel, val, interval): # Создаёт список файлов удоволетворяющих условию времени.
+    name = str()
+    for f_name in os.listdir(os.getcwd()+f'\FilesForBot\{val}_reports'):
+        if f_name.split(f'_{val}')[1].split('h')[0] == str(interval):
+            # name.append(f_name.split(f'_{val}')[0])
+            if cotel[:3:] in f_name and cotel[-3::] in f_name:
+                name = f_name
+                print(name)
+                break
+
+    return name
 # print(parse_file_district())
 
 
@@ -543,3 +573,41 @@ def favourite_del(adres, id):  # Удаление котельной из под
 
 
 
+def convert_pdf2img(input_file: str, pages: Tuple = None): # переводит pdf в png для отправки в чат.
+    """Converts pdf to image and generates a file by page"""
+    # Open the document
+    pdfIn = fitz.open(input_file)
+    output_files = []
+    # Iterate throughout the pages
+    for pg in range(pdfIn.pageCount):
+        if str(pages) != str(None):
+            if str(pg) not in str(pages):
+                continue
+        # Select a page
+        page = pdfIn[pg]
+        rotate = int(0)
+        # PDF Page is converted into a whole picture 1056*816 and then for each picture a screenshot is taken.
+        # zoom = 1.33333333 -----> Image size = 1056*816
+        # zoom = 2 ---> 2 * Default Resolution (text is clear, image text is hard to read)    = filesize small / Image size = 1584*1224
+        # zoom = 4 ---> 4 * Default Resolution (text is clear, image text is barely readable) = filesize large
+        # zoom = 8 ---> 8 * Default Resolution (text is clear, image text is readable) = filesize large
+        zoom_x = 1.33333333
+        zoom_y = 1.33333333
+        # The zoom factor is equal to 2 in order to make text clear
+        # Pre-rotate is to rotate if needed.
+        mat = fitz.Matrix(zoom_x, zoom_y).preRotate(rotate)
+        pix = page.getPixmap(matrix=mat, alpha=False)
+        output_file = f"{os.path.splitext(os.path.basename(input_file))[0]}.png"
+        pix.writePNG(output_file)
+        output_files.append(output_file)
+    pdfIn.close()
+    summary = {
+        "File": input_file, "Pages": str(pages), "Output File(s)": str(output_files)
+    }
+    
+    # Printing Summary
+    print("## Summary ########################################################")
+    print("\n".join("{}:{}".format(i, j) for i, j in summary.items()))
+    print("###################################################################")
+    return output_files
+    
