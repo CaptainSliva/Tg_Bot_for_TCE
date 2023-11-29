@@ -8,6 +8,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import os
 
 # Мои файлы
 import Buttons as btn
@@ -74,6 +75,10 @@ ci.create_dir_for_admin()
 def normal(nstr): # Функция ля удаления айдишника из адреса    nstr - строка с айдишником
     return nstr.split('/')[0]
 
+async def send_graphic(graphic, chat_id):
+    with open(graphic[0], 'rb') as photo:
+        await bot.send_photo(chat_id=chat_id, photo=photo)
+    os.remove(graphic[0])
 
 # Установление времени после перезапуска бота
 for i in ci.adding_msg(): # Ключи словаря
@@ -281,6 +286,10 @@ async def bot_message(message: types.Message):
             await message.answer('Графики', reply_markup = btn.GraphicTipe)
 
 
+        if message.text == 'Назад':
+            await message.answer('Графики', reply_markup = btn.GraphicTipe)
+
+
         if message.text == 'T':
             await message.answer('Графики температуры', reply_markup = btn.TGraphicInterval)
 
@@ -288,15 +297,13 @@ async def bot_message(message: types.Message):
             # btn.NewGraphic('T', 1)
             await message.answer(f'{CurrentCotel.cotel[:-3:]}, график температуры за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
             graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 1))
-            with open(graphic[0], 'rb') as photo:
-                await bot.send_photo(chat_id=message.chat.id, photo=photo)
+            await send_graphic(graphic, message.chat.id)
 
         if message.text == 'T за 12 часов':
             # btn.NewGraphic('T', 12)
             await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики температуры за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
             graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 12))
-            with open(graphic[0], 'rb') as photo:
-                await bot.send_photo(chat_id=message.chat.id, photo=photo)
+            await send_graphic(graphic, message.chat.id)
     
 
         if message.text == 'P':
@@ -306,15 +313,14 @@ async def bot_message(message: types.Message):
             # btn.NewGraphic('P', 1)
             await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
             graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 1))
-            with open(graphic[0], 'rb') as photo:
-                await bot.send_photo(chat_id=message.chat.id, photo=photo)
+            await send_graphic(graphic, message.chat.id)
 
         if message.text == 'P за 12 часов':
             # btn.NewGraphic('P', 12)
             await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
             graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 12))
-            with open(graphic[0], 'rb') as photo:
-                await bot.send_photo(chat_id=message.chat.id, photo=photo)
+            await send_graphic(graphic, message.chat.id)
+
 
 
 
@@ -703,8 +709,8 @@ async def send_message_interval(): # Функция для создания со
 
     
 
-# scheduler.add_job(send_message_interval, trigger='interval', seconds=1) # Создание сообщения 276693613 на рассылку 5288656086
-# scheduler.start() # Рассылка
+scheduler.add_job(send_message_interval, trigger='interval', seconds=1) # Создание сообщения 276693613 на рассылку 5288656086
+scheduler.start() # Рассылка
 
 
 

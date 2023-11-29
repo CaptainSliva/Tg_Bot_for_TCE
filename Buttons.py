@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 import CotInfo as ci
 
 
@@ -21,7 +21,7 @@ MyFavs = KeyboardButton('Избранное')
 
 MainMenu = ReplyKeyboardMarkup(resize_keyboard=True).row(MySubscribes, MyFavs).add(ListAll)
     
-MainNext = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).add(Graphics)
+MainNext = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain)
 
 # Graphics
 
@@ -31,10 +31,14 @@ t12 = KeyboardButton('T за 12 часов')
 p = KeyboardButton('P')
 p1 = KeyboardButton('P за час')
 p12 = KeyboardButton('P за 12 часов')
+back = KeyboardButton('Назад')
 
+
+# BackFromP = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(p1, p12)
+# BackFromTP = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(t1, t12)
 GraphicTipe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(t, p)
-TGraphicInterval = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(t1, t12)
-PGraphicInterval = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(p1, p12)
+TGraphicInterval = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(t1, t12)
+PGraphicInterval = ReplyKeyboardMarkup(resize_keyboard=True).row(BtnMain, back).row(p1, p12)
 
 
 # def NewGraphic(val, interval): # Функция для генерации инлайн кнопок в раздел с подписками # message.from_user.id - id пользователя  # adres - adresa # Создание кнопок на зафоловеные котельные
@@ -107,7 +111,7 @@ for i in [j for j in ci.parse_table()]: # Создание кнопок для �
     AllListCotel.add(InlineKeyboardButton(text=i, callback_data=f'{i}/nosubscribe'))
 
 Add_to_Subscribe = ReplyKeyboardMarkup().row(2)
-Add_to_Subscribe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe)
+Add_to_Subscribe = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe, Graphics)
 Add_to_Subscribe_with_Fav = ReplyKeyboardMarkup(resize_keyboard=True).add(BtnMain).row(ToSubscribe, Graphics, ToFav)
 
 

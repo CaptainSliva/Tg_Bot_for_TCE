@@ -8,6 +8,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import os
 
 # Мои файлы
 import Buttons_alpha as btn
@@ -35,6 +36,7 @@ number = str()
 fav_adres = str()
 distribut = str()
 scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+#
 
 ci.create_subscribers()
 ci.create_dir_for_admin()
@@ -43,13 +45,17 @@ ci.create_dir_for_admin()
 def normal(nstr): # Функция ля удаления айдишника из адреса    nstr - строка с айдишником
     return nstr.split('/')[0]
 
+async def send_graphic(graphic, chat_id):
+    with open(graphic[0], 'rb') as photo:
+        await bot.send_photo(chat_id=chat_id, photo=photo)
+    os.remove(graphic[0])
 
 # Установление времени после перезапуска бота
 for i in ci.adding_msg(): # Ключи словаря
-    # print(i)
+    print(i)
     try: # Проверка на то запущен или остановлен бот у пользователя (надо для того что бы бот не лёг)
         for j in ci.adding_msg()[i]: # Значения для ключа
-            # print(i); # print(j)
+            print(i); print(j)
             ci.add_newtime(str(j).split(', ')[0], i)
     except:
         pass
@@ -64,16 +70,13 @@ class UserState(StatesGroup):
     anytime = State()
 
 
-# class Admin(StatesGroup):
-#     requests = State()
-#     subscribers = State()
-    
-
+class CurrentCotel:
+    cotel = str()
 
 @dp.message_handler(commands = ['start', 's', 'старт'])
 async def cmd_start(message: types.Message):
     global Admin_id
-    Admin_id = ci.parse_config('Admin')
+    Admin_id = bc.Config['Admin']
     if ci.bot_check_sub(str(message.from_user.id), 'Subscribers'):
         await message.answer(f'Здравствуйте! {message.from_user.full_name}', reply_markup=btn.MainMenu)
     
@@ -117,12 +120,11 @@ async def cmd_start(message: types.Message):
             await state.update_data(phonenumber=message.text)
             data = await state.get_data()
             if all(i.isalpha() for i in data['firstname']) and all(i.isalpha() for i in data['name']) and all(i.isalpha() for i in data['lastname']) and all(i.isdigit() or i in ['+', '-'] for i in data['phonenumber']):
-      
                 await message.answer('Регистрация пройдена, ожидайте получения прав для пользования ботом')
                 ci.bot_nosubscribers(f"{data['firstname']} {data['name']} {data['lastname']} {data['phonenumber']}", data['userid'])
             else:
                 if not all(i.isalpha() for i in data['firstname']):
-                    await message.answer('При вводе Фамилии была допущена ошибка. Пожалйста, нажмите на /s для повторной регистрации')
+                    await message.answer('При вводе фамилии была допущена ошибка. Пожалйста, нажмите на /s для повторной регистрации')
                 if not all(i.isalpha() for i in data['name']):
                     await message.answer('При вводе имени была допущена ошибка. Пожалйста, нажмите на /s для повторной регистрации')
                 if not all(i.isalpha() for i in data['lastname']):
@@ -132,6 +134,7 @@ async def cmd_start(message: types.Message):
             await UserState.next()
     else:
         await message.answer(f'Здравствуйте! {message.from_user.full_name}. Вашу заявку ещё не приняли')
+
 
 @dp.message_handler() # Обработчик сообщений
 async def bot_message(message: types.Message):
@@ -151,13 +154,13 @@ async def bot_message(message: types.Message):
         
         if message.text == 'Админка' and str(message.from_user.id) == Admin_id:
             await message.answer('Админка', reply_markup=btn.Admin_Second)
-            # print('Админка')
+            print('Админка')
 
         if message.text == 'Заявки' and str(message.from_user.id) == Admin_id:
             btn.Nosubs()
-            # print('Заявки')
+            print('Заявки')
             await message.answer('Заявки на пользование ботом', reply_markup=btn.SubscribersNo)
-            # # print(btn.SubscribersNo_t)
+            # print(btn.SubscribersNo_t)
             # await Admin.requests.set()
             
         @dp.callback_query_handler(text = btn.SubscribersNo_t) 
@@ -165,29 +168,29 @@ async def bot_message(message: types.Message):
             # await Admin.requests.set()
             global distribut
             callback_answer = normal(callback.data)
-            # # print(callback_answer)
+            # print(callback_answer)
             user_l = ''.join([f'{i}/\\' for i in ci.parse_user_info(str(callback_answer), 'SubscribersNo')]).replace('/\\','\n')
             await callback.message.answer(user_l, reply_markup=btn.Admin_Distributor)
             await callback.answer()
-            # # print(callback_answer)
+            # print(callback_answer)
             distribut = callback_answer
             # await state.finish()
         if message.text == 'Пользователи' and str(message.from_user.id) == Admin_id:
             btn.Subs()
-            # print('Пользоатели')
+            print('Пользоатели')
             await message.answer('Пользователи бота', reply_markup=btn.Subscribers)
-            # # print(btn.Subscribers_t)
+            # print(btn.Subscribers_t)
             
         @dp.callback_query_handler(text = btn.Subscribers_t) 
         async def msg_answer_g(callback: types.CallbackQuery): 
             global distribut
             # await Admin.subscribers.set()   
             callback_answer = normal(callback.data)
-            # # print(callback_answer)
+            # print(callback_answer)
             user_l = ''.join([f'{i}/\\' for i in ci.parse_user_info(str(callback_answer), 'Subscribers')]).replace('/\\','\n')
             await callback.message.answer(user_l, reply_markup=btn.Admin_Del_From_Bot_Subs)
             await callback.answer()
-            # # print(callback_answer)
+            # print(callback_answer)
             distribut = callback_answer
             # await state.finish()
         if message.text == 'Принять' and str(message.from_user.id) == Admin_id:
@@ -206,7 +209,48 @@ async def bot_message(message: types.Message):
             ci.del_from(distribut, 'Subscribers')
 
 
-    # Переход в главное меню
+    # Графики
+        if message.text == 'Графики':
+            await message.answer('Графики', reply_markup = btn.GraphicTipe)
+
+
+        if message.text == 'Назад':
+            await message.answer('Графики', reply_markup = btn.GraphicTipe)
+
+
+        if message.text == 'T':
+            await message.answer('Графики температуры', reply_markup = btn.TGraphicInterval)
+
+        if message.text == 'T за час':
+            # btn.NewGraphic('T', 1)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, график температуры за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 1))
+            await send_graphic(graphic, message.chat.id)
+
+        if message.text == 'T за 12 часов':
+            # btn.NewGraphic('T', 12)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики температуры за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 12))
+            await send_graphic(graphic, message.chat.id)
+    
+
+        if message.text == 'P':
+            await message.answer('Графики давления', reply_markup = btn.PGraphicInterval)
+
+        if message.text == 'P за час':
+            # btn.NewGraphic('P', 1)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 1))
+            await send_graphic(graphic, message.chat.id)
+
+        if message.text == 'P за 12 часов':
+            # btn.NewGraphic('P', 12)
+            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 12))
+            await send_graphic(graphic, message.chat.id)
+
+
+
 
         
         if message.text == 'Главное меню' and str(message.from_user.id) == Admin_id:
@@ -222,8 +266,8 @@ async def bot_message(message: types.Message):
     # С подпиской
         if message.text == 'Мои подписки':
 
-            # print('В иф для отписки вошел')
-            # print(message.from_user.id)
+            print('В иф для отписки вошел')
+            print(message.from_user.id)
             await message.answer('Подписки', reply_markup = btn.MainNext)
             if len([i for i in ci.file_read(message.from_user.id) if 'sub' in i]) == 0:
                 await message.answer('У вас нет подписок', reply_markup = btn.MainNext)
@@ -238,13 +282,17 @@ async def bot_message(message: types.Message):
             global subscribe_adres
             global fav_adres
             global mes_id
-            # print('отработала отписка')
-            # print(mes_id)
+            print('отработала отписка')
+            print(mes_id)
             callback_answer=normal(callback.data) # Переменная для сохранения адреса
-            await btn.screening_generate(callback_answer, mes_id)
-         
+            btn.screening_generate(callback_answer, mes_id)
+            # cotelnaya_l=''.join([f'{i}/\\' for i in ci.parse_table()[f'{callback_answer}']]).replace('/\\','\n')
+            # if ci.check_param('Settings', 'separate', message.from_user.id):
             cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
-           
+            # else:
+            #     cotelnaya_l=''.join([f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
+
+
 
             if ci.file_check_copy(f'{callback_answer}', callback.from_user.id, 'sub') and ci.file_check_copy(f'{callback_answer}', callback.from_user.id, 'fav'): # Если котельная в избранном и подписках
                 await callback.message.answer(cotelnaya_l, reply_markup = btn.Delete_from_Subscribe.add(btn.FromSubscribe)) # Выводит информацию о котельной
@@ -261,18 +309,24 @@ async def bot_message(message: types.Message):
 
             subscribe_adres = callback_answer
             fav_adres = callback_answer
-          
+            print(subscribe_adres, 'it is subscribe adress', callback_answer)
+
+
+
         if message.text == 'Задать произвольный интервал сообщений':
-        
+            print(message.text)
+            print(subscribe_adres)
+            print(mes_id)
             await message.answer('Введите интервал сообщений. От 5 до 1440 минут', reply_markup = btn.MainNext)
             await UserState.anytime.set()
             @dp.message_handler(state = UserState.anytime)
             async def msg_answer(message: types.Message, state = FSMContext):
                 global subscribe_adres, mes_id
-                
+                print(subscribe_adres)
+                print(mes_id)
                 await state.update_data(anytime=message.text)
                 data = await state.get_data()
-                # print(type(message.text), message.text)
+                print(type(message.text), message.text)
                 if message.text.isdigit() and 1441 > int(message.text) > 4:
                     ci.send_message_interval(subscribe_adres, mes_id, data['anytime'])
                     ci.add_newtime(subscribe_adres, mes_id)
@@ -297,28 +351,31 @@ async def bot_message(message: types.Message):
     # Избранные
 
         if message.text == 'Избранное':
-      
+            print('В иф с избранным вошел')
+            # btn.AddToFavsCotel(str(message.from_user.id))
             await message.answer('Избранное', reply_markup = btn.MainNext)
             if len([i for i in ci.file_read(message.from_user.id) if 'fav' in i]) == 0:
                 await message.answer('У вас нет избранных котельных', reply_markup = btn.MainNext)
             else:
                 btn.AddToFavsCotel(str(message.from_user.id))
-                # print(message.text)
+                print(message.text)
                 await message.answer('Список котельных:', reply_markup = btn.Favourites)
         
         @dp.callback_query_handler(text = btn.Favourites_t) # Обработчик нажатия инлайн кнопок         
         async def msg_answer(callback: types.CallbackQuery):    
 
             global fav_adres, subscribe_adres
-            # print('отработала избранное')
+            print('отработала избранное')
             callback_answer=normal(callback.data) # Переменная для сохранения адреса
-   
+            CurrentCotel.cotel = callback_answer
+
             cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
-          
+
             if ci.file_check_copy(f'{callback_answer}', callback.from_user.id, 'sub') and ci.file_check_copy(f'{callback_answer}', callback.from_user.id, 'fav'):
                 await callback.message.answer(cotelnaya_l, reply_markup = btn.Del_From_Fav) # Выводит информацию о котельной
                 await callback.answer()
-         
+                # adress = callback_answer
+                # fav_adres = callback_answer
 
             else:
                 await callback.message.answer(f'{cotelnaya_l}', reply_markup = btn.Add_to_Fav_with_Sub) # Выводит информацию о котельной
@@ -329,7 +386,8 @@ async def bot_message(message: types.Message):
 
             fav_adres = callback_answer
             subscribe_adres = callback_answer
-          
+            # await state.finish()
+            print(fav_adres, 'it is fav adress')
 
 
 
@@ -345,30 +403,36 @@ async def bot_message(message: types.Message):
 
         if message.text == 'Получить список районов':
 
-            # print('В иф для подписки вошел')
+            print('В иф для подписки вошел')
             # await message.answer('Получить список районов', reply_markup = btn.MainNext)
             await message.answer('Список районов:', reply_markup = btn.Cotels_Districts)
         @dp.callback_query_handler(text = btn.Cotels_Districts_t) # Обработчик нажатия инлайн кнопок 1 ур
         async def msg_answer_1(callback: types.CallbackQuery): # Вывод районов в инлайн кнопках
-            # print('я в 1 ур')
+            print('я в 1 ур')
             back = normal(callback.data)
             btn.CotsInDistrict(back)
             await callback.message.answer(f'{back}', reply_markup = btn.Cotels_in_District)
             await callback.answer()
-            # print(back, 'Остановилось')
+            print(back, 'Остановилось')
 
             @dp.callback_query_handler(text = btn.Cotels_in_District_t) # Обработчик нажатия инлайн кнопок 2 ур
             async def msg_answer_2(callback: types.CallbackQuery): # Вывод котельных для выбранного района
                 global adress
                 global subscribe_adres
                 global fav_adres
-       
+                # await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.message_id) # Штука для удаления сообщения(если надо будет)
+                print('я во 2 ур')
+                print(message.from_user.id)
+                print(callback.data)
+                print(message.message_id)
                 callback_answer=normal(callback.data) # Переменная для сохранения адреса
                 if len(ci.parse_file_district()[callback_answer]) < 2:
 
                     # if ci.check_param('Settings', 'separate', message.from_user.id):
                     cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{callback_answer}(1)']])
-                    
+                    # else:
+                    #     cotelnaya_l=''.join([f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
+
                     if ci.file_check_copy(f'{callback_answer}(1)', callback.from_user.id, 'sub') and ci.file_check_copy(f'{callback_answer}(1)', callback.from_user.id, 'fav'):
                         await callback.message.answer(cotelnaya_l, reply_markup = btn.MainNext) # Выводит информацию о котельной
                         await callback.answer()
@@ -377,9 +441,8 @@ async def bot_message(message: types.Message):
                         subscribe_adres = f'{callback_answer}(1)'
 
                     elif ci.file_check_copy(f'{callback_answer}(1)', callback.from_user.id, 'sub'):
-                        # print(f'{callback_answer}(1)')
+                        print(f'{callback_answer}(1)')
 
-                        # print(cotelnaya_l)
                         await callback.message.answer(f'{cotelnaya_l}', reply_markup = btn.AddToFav) # Выводит информацию о котельной
                         await callback.answer()
                         adress = callback_answer
@@ -405,22 +468,26 @@ async def bot_message(message: types.Message):
                     btn.Teplosystems_Cotel_test(callback_answer)
                     
                     await callback.message.answer(f'Теплосистемы {callback_answer}:', reply_markup = btn.TS_cotel_test)
+                print(adress, type(adress))
+                CurrentCotel.cotel = adress+'(1)'
 
 
-
-            # print(message.text, '+++++++++++++++++++++++++++++++++++++', adress)
+            print(message.text, '+++++++++++++++++++++++++++++++++++++', adress)
 
 
 
         if 'Теплосистема' in message.text:
             
-            # print(message.text,'---------------------------------------')
+            print(message.text,'---------------------------------------')
             number = message.text.split('Теплосистема ')[1]
             cotelnaya=f'{adress}({number})'
-            # print(cotelnaya)
+            print(cotelnaya)
             # if ci.check_param('Settings', 'separate', message.from_user.id):
             cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{cotelnaya}']])
-           
+            # else:
+            #     cotelnaya_l=''.join([f'{i}\n' for i in ci.parse_table()[f'{cotelnaya}']])
+            # cotelnaya_l=''.join([f'{i}/\\' for i in ci.parse_table()[f'{adress}({number})']]).replace('/\\','\n') 
+
             if ci.file_check_copy(cotelnaya, message.from_user.id, 'sub') and ci.file_check_copy(cotelnaya, message.from_user.id, 'fav'):
                 await message.answer(f'{cotelnaya_l}', reply_markup = btn.MainNext) # Выводит информацию о котельной
                 
@@ -435,7 +502,7 @@ async def bot_message(message: types.Message):
             
             fav_adres = cotelnaya
             subscribe_adres = cotelnaya
-            # print(cotelnaya_l)
+            print(cotelnaya_l)
         try:
             if adress in [str(j).split('(')[0] for j in ci.parse_table() if len(ci.parse_file_district()[adress]) < 2]:
                 cotelnaya=f'{adress}(1)'
@@ -445,7 +512,7 @@ async def bot_message(message: types.Message):
 
     # Подписки/отписки и прочая мешура
         if message.text == 'Подписаться': 
-            # print(cotelnaya)
+            print(cotelnaya)
             if subscribe_adres in [j for j in ci.parse_table()]:
                 subscribe_adres_for_message = subscribe_adres.split('(')[0]
                 await message.answer(f'Вы подписались на {subscribe_adres_for_message}', reply_markup = btn.MainNext)
@@ -465,7 +532,7 @@ async def bot_message(message: types.Message):
                 await message.answer(f'Повторите попытку')
 
         if message.text == 'Отписаться':
-            # print(message.text)
+            print(message.text)
             if subscribe_adres != '':
                 ci.subscribe_del(subscribe_adres, message.from_user.id)
                 subscribe_adres_for_message = subscribe_adres.split('(')[0]
@@ -476,7 +543,7 @@ async def bot_message(message: types.Message):
 
 
         if message.text == 'Добавить в избранное':
-            # print(message.text)
+            print(message.text)
             if fav_adres in [j for j in ci.parse_table()]:
                 ci.favourite_add(fav_adres, message.from_user.id)
                 fav_adres_for_message = fav_adres.split('(')[0]
@@ -492,7 +559,7 @@ async def bot_message(message: types.Message):
                 await message.answer(f'Повторите попытку')
 
         if message.text == 'Удалить из избранного':
-            # print(message.text)
+            print(message.text)
             if fav_adres != '':
                 ci.favourite_del(fav_adres, message.from_user.id)
                 fav_adres_for_message = fav_adres.split('(')[0]
@@ -516,12 +583,12 @@ async def bot_message(message: types.Message):
 async def send_message_interval(): # Функция для создания сообщений для рассылки
 
     for i in ci.adding_msg(): # Ключи словаря
-        # print(i)
+        print(i)
         try: # Проверка на то запущен или остановлен бот у пользователя (надо для того что бы бот не лёг)
             for j in ci.adding_msg()[i]: # Значения для ключа
                 if '=' not in j:
                     
-                    # # print(ci.adding_msg()[i])
+                    # print(ci.adding_msg()[i])
                     
 
                     now_time = int(str(dt.datetime.now().strftime('%H:%M:00')).split(':')[0])*60+int(str(dt.datetime.now().strftime('%H:%M:00')).split(':')[1])
@@ -529,11 +596,13 @@ async def send_message_interval(): # Функция для создания со
                     j_time = int((str(j).split(', ')[-1]).split(':')[0])*60+int((str(j).split(', ')[-1]).split(':')[1])
                     # except: pass
                     j_adres = str(j).split(', ')[0].replace('\ufeff', '')
-     
+                    print(j)
+                    print( str(dt.datetime.now().strftime('%H:%M:00')), j_time, now_time)
                     if j_time == int(str(dt.datetime.now().strftime('%H:%M:00')).split(':')[0])*60+int(str(dt.datetime.now().strftime('%H:%M:00')).split(':')[1]):
 
                         cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[str(j.split(', ')[0])]])
 
+                        print(cotelnaya_l)
                         await bot.send_message(i, f'{cotelnaya_l}') # Выводит информацию о котельной
                         ci.file_new_time(j_adres, i)
                     

@@ -14,7 +14,7 @@ Settings:
 
 
 
-ЗАМЕТКА: pyinstaller -F --copy-metadata magic_filter "C:/Users/Дима/Documents/VSCode/Мелкопроекты/TGbot Мелкопроект/TelegramBot_alpha.py         для создания exe для ТГ бота
+ЗАМЕТКА: pyinstaller -F --copy-metadata magic_filter "C:/Users/Дима/Documents/VSCode/Мелкопроекты/Tg_Bot_for ТКЭ/TGbot Мелкопроект/TelegramBot.py         для создания exe для ТГ бота
 pyinstaller -F --copy-metadata magic_filter "C:/Users/Дима/Documents/VSCode/заказы_kwork/yeveb51366_бот для пересылки файлов/main.py"
 да
 ------------------------------------
@@ -86,5 +86,5 @@ T за час  T за 12 часов			P за час  P за 12 часов
 		
 
 
-
+Добавить кнопку назад в графиках
 
