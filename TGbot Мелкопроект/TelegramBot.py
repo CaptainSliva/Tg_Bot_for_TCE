@@ -101,7 +101,7 @@ class UserState(StatesGroup):
 
 
 class CurrentCotel:
-    cotel = str()
+    cotel = dict()
 # class Admin(StatesGroup):
 #     requests = State()
 #     subscribers = State()
@@ -295,14 +295,14 @@ async def bot_message(message: types.Message):
 
         if message.text == 'T за час':
             # btn.NewGraphic('T', 1)
-            await message.answer(f'{CurrentCotel.cotel[:-3:]}, график температуры за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
-            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 1))
+            await message.answer(f'{CurrentCotel.cotel[message.from_user.id][:-3:]}, график температуры за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel[message.from_user.id], 'T', 1))
             await send_graphic(graphic, message.chat.id)
 
         if message.text == 'T за 12 часов':
             # btn.NewGraphic('T', 12)
-            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики температуры за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
-            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'T', 12))
+            await message.answer(f'{CurrentCotel.cotel[message.from_user.id][:-3:]}, графики температуры за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\T_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel[message.from_user.id], 'T', 12))
             await send_graphic(graphic, message.chat.id)
     
 
@@ -311,14 +311,14 @@ async def bot_message(message: types.Message):
 
         if message.text == 'P за час':
             # btn.NewGraphic('P', 1)
-            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
-            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 1))
+            await message.answer(f'{CurrentCotel.cotel[message.from_user.id][:-3:]}, графики давления за час:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel[message.from_user.id], 'P', 1))
             await send_graphic(graphic, message.chat.id)
 
         if message.text == 'P за 12 часов':
             # btn.NewGraphic('P', 12)
-            await message.answer(f'{CurrentCotel.cotel[:-3:]}, графики давления за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
-            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel, 'P', 12))
+            await message.answer(f'{CurrentCotel.cotel[message.from_user.id][:-3:]}, графики давления за 12 часов:', reply_markup = btn.Inline_keyboard.MyGraphic)
+            graphic = ci.convert_pdf2img('FilesForBot\P_reports\\'+ci.parse_file_TP_district(CurrentCotel.cotel[message.from_user.id], 'P', 12))
             await send_graphic(graphic, message.chat.id)
 
 
@@ -458,7 +458,7 @@ async def bot_message(message: types.Message):
             global fav_adres, subscribe_adres
             print('отработала избранное')
             callback_answer=normal(callback.data) # Переменная для сохранения адреса
-            CurrentCotel.cotel = callback_answer
+            CurrentCotel.cotel[callback.from_user.id] = callback_answer
             # cotelnaya_l=''.join([f'{i}/\\' for i in ci.parse_table()[f'{callback_answer}']]).replace('/\\','\n')
             # if ci.check_param('Settings', 'separate', message.from_user.id):
             cotelnaya_l=''.join([i.split(',')[0]+','+i.split(',')[1][0:2]+'\n' if ',' in i else f'{i}\n' for i in ci.parse_table()[f'{callback_answer}']])
@@ -564,7 +564,7 @@ async def bot_message(message: types.Message):
                     
                     await callback.message.answer(f'Теплосистемы {callback_answer}:', reply_markup = btn.TS_cotel_test)
                 print(adress, type(adress))
-                CurrentCotel.cotel = adress+'(1)'
+                CurrentCotel.cotel[callback.from_user.id] = adress+'(1)'
 
 
             print(message.text, '+++++++++++++++++++++++++++++++++++++', adress)
@@ -595,6 +595,7 @@ async def bot_message(message: types.Message):
             else:
                 await message.answer(f'{cotelnaya_l}', reply_markup = btn.Add_to_Subscribe_with_Fav) # Выводит информацию о котельной
             
+            CurrentCotel.cotel[message.from_user.id] = cotelnaya
             fav_adres = cotelnaya
             subscribe_adres = cotelnaya
             print(cotelnaya_l)
